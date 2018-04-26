@@ -1,0 +1,92 @@
+import com.android.manifmerger.ManifestMerger2
+import com.android.manifmerger.MergingReport
+import com.android.manifmerger.XmlDocument
+import com.android.utils.ILogger
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "com.android.tools.build:manifest-merger:25.3.0"
+    }
+}
+
+def manifestSrcFiles = []
+
+def logger = new ILogger() {
+    @Override
+    void error(Throwable t, String msgFormat, Object... args) {
+
+    }
+
+    @Override
+    void warning(String msgFormat, Object... args) {
+
+    }
+
+    @Override
+    void info(String msgFormat, Object... args) {
+
+    }
+
+    @Override
+    void verbose(String msgFormat, Object... args) {
+
+    }
+};
+
+def manifestMergeHandler = { ->
+
+    File moduleDir = new File("$projectDir/src");
+    File[] pModuleDirs = moduleDir.listFiles();
+    if (pModuleDirs == null || pModuleDirs.length == 0) {
+        return;
+    }
+
+    pModuleDirs.each {
+        if (it.isDirectory()) {
+            def manifestPath = it.absolutePath + "/main/AndroidManifest.xml";
+            def manifestSrcFile = new File(manifestPath);
+            if (manifestSrcFile.exists() && !manifestSrcFiles.contains(manifestPath)) {
+                manifestSrcFiles << manifestPath
+            }
+        }
+    }
+
+    println '======manifestSrcFiles: ' + manifestSrcFiles
+    if (manifestSrcFiles == null || manifestSrcFiles.isEmpty() == 0) {
+        return;
+    }
+
+    File mainManifestFile = new File(manifestSrcFiles[manifestSrcFiles.size() - 1]);
+
+    ManifestMerger2.MergeType mergeType = ManifestMerger2.MergeType.APPLICATION
+    XmlDocument.Type documentType = XmlDocument.Type.MAIN;
+    ManifestMerger2.Invoker invoker = new ManifestMerger2.Invoker(mainManifestFile, logger, mergeType, documentType);
+    for (int i = 0; i < manifestSrcFiles.size() - 1; i++) {
+        File microManifestFile = new File( manifestSrcFiles[i]);
+        if (microManifestFile.exists()) {
+            invoker.addLibraryManifest(microManifestFile)
+        }
+    }
+    def mergingReport = invoker.merge()
+    def moduleAndroidManifest = mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED)
+
+    println '======buildDir: ' + buildDir
+    new File("$buildDir").mkdirs()
+    def file = new File("$buildDir/AndroidManifest.xml")
+    file.createNewFile()
+    file.write(moduleAndroidManifest)
+
+    android.sourceSets.main.manifest.srcFile "$buildDir/AndroidManifest.xml"
+}
+
+// 这是正常编译时使用的
+task manifestMergeTask {
+    manifestMergeHandler()
+}
+
+preBuild.doFirst {
+    manifestMergeHandler()
+}
