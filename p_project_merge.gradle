@@ -55,7 +55,7 @@ def manifestMergeHandler = { ->
     }
 
     println '======manifestSrcFiles: ' + manifestSrcFiles
-    if (manifestSrcFiles == null || manifestSrcFiles.isEmpty() == 0) {
+    if (manifestSrcFiles == null || manifestSrcFiles.isEmpty()) {
         return;
     }
 
