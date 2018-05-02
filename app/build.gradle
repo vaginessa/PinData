@@ -24,10 +24,22 @@ android {
         // 这里必须要的，不然编译的时候有找不到源代码
         // 参考美团https://tech.meituan.com/meituan_food_delivery_android_architecture_evolution.html
         main {
-            def dirs = ['p_1', 'p_widget']
-            dirs.each { dir ->
-                java.srcDir("src/$dir/main/java")
-                res.srcDir("src/$dir/main/res")
+//            def dirs = ['p_1', 'p_widget']
+//            dirs.each { dir ->
+//                java.srcDir("src/$dir/main/java")
+//                res.srcDir("src/$dir/main/res")
+//            }
+
+            File moduleDir = new File("$projectDir/src");
+            File[] pModuleDirs = moduleDir.listFiles();
+            if (pModuleDirs != null && pModuleDirs.length > 0) {
+                pModuleDirs.each {
+                    if (it.isDirectory() && it.name.startsWith("p_")) {
+                        println '====== it.name：' + it.name
+                        java.srcDir("src/$it.name/main/java")
+                        res.srcDir("src/$it.name/main/res")
+                    }
+                }
             }
         }
     }

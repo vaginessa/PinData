@@ -45,7 +45,7 @@ def manifestMergeHandler = { ->
     }
 
     pModuleDirs.each {
-        if (it.isDirectory()) {
+        if (it.isDirectory() && it.name.startsWith("p_")) {
             def manifestPath = it.absolutePath + "/main/AndroidManifest.xml";
             def manifestSrcFile = new File(manifestPath);
             if (manifestSrcFile.exists() && !manifestSrcFiles.contains(manifestPath)) {
